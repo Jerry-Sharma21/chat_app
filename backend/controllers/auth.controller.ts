@@ -28,7 +28,8 @@ export const signup = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const defaultProfilePic = `https://avatar.iran.liara.run/public/${gender}?username=${userName}`;
+    const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${userName}`;
+    const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${userName}`;
 
     // Create a new user instance
     const newUser = new User({
@@ -36,7 +37,7 @@ export const signup = async (req: Request, res: Response) => {
       userName,
       password: hashedPassword,
       gender,
-      profilePic: defaultProfilePic,
+      profilePic: gender === 'male' ? boyProfilePic : girlProfilePic,
     });
 
     await newUser.save();

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
 
 import User from '../models/user.model';
+import generateToken from '../utils/generateToken';
 
 /**
  * Controller for user registration (signup)
@@ -20,6 +21,7 @@ export const signup = async (req: Request, res: Response) => {
 
     // Check if the username already exists
     const existingUser = await User.findOne({ userName });
+
     if (existingUser) {
       return res.status(400).json({ error: 'Username already exists.' });
     }
@@ -40,15 +42,20 @@ export const signup = async (req: Request, res: Response) => {
       profilePic: gender === 'male' ? boyProfilePic : girlProfilePic,
     });
 
-    await newUser.save();
+    if (newUser) {
+      generateToken(newUser._id, res);
+      await newUser.save();
 
-    // Respond with the created user details
-    res.status(201).json({
-      _id: newUser._id,
-      fullName: newUser.fullName,
-      userName: newUser.userName,
-      profilePic: newUser.profilePic,
-    });
+      // Respond with the created user details
+      res.status(201).json({
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        userName: newUser.userName,
+        profilePic: newUser.profilePic,
+      });
+    } else {
+      return res.status(500).json({ error: 'Invalid User Data' });
+    }
   } catch (error: any) {
     console.error('Error in signup controller:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });

@@ -47,7 +47,7 @@ export const signup = async (req: Request, res: Response) => {
       await newUser.save();
 
       // Respond with the created user details
-      res.status(201).json({
+      res.status(200).json({
         _id: newUser._id,
         fullName: newUser.fullName,
         userName: newUser.userName,
@@ -68,9 +68,39 @@ export const signup = async (req: Request, res: Response) => {
  * @param res - Express Response object
  */
 
-export const login = (req: Request, res: Response) => {
-  console.log('Login user');
-  // Add login logic here
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { userName, password } = req.body;
+
+    // Finding user by username in the database
+    const user = await User.findOne({ userName });
+
+    // Checking if the user exists and comparing the passwords
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user?.password || '',
+    );
+
+    // Handling invalid username or password
+    if (!user || !isPasswordCorrect) {
+      return res.status(400).json({ error: 'Invalid Username or Password' });
+    }
+
+    // Generating and setting JWT token in the cookie
+    generateToken(user._id, res);
+
+    // Sending a success response with relevant user information
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      userName: user.userName,
+      profilePic: user.profilePic,
+    });
+  } catch (error: any) {
+    // Handling errors and sending an internal server error response
+    console.error('Error in login controller:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
 
 /**
@@ -80,6 +110,15 @@ export const login = (req: Request, res: Response) => {
  */
 
 export const logout = (req: Request, res: Response) => {
-  console.log('Logout user');
-  // Add logout logic here
+  try {
+    // Clearing the JWT cookie by setting its maxAge to 0
+    res.cookie('jwt', '', { maxAge: 0 });
+
+    // Sending a success response for successful logout
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error: any) {
+    // Handling errors and sending an internal server error response
+    console.error('Error in logout controller:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };

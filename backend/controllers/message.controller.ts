@@ -5,7 +5,7 @@ import Message from '../models/message.model.';
 import Conversation from '../models/conversation.model';
 
 // Extend the Request object to include the entire User object in the user property
-interface CustomRequest extends ExpressRequest {
+export interface CustomRequest extends ExpressRequest {
   user?: IUser;
 }
 
@@ -63,7 +63,7 @@ export const sendMessage = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * Controller function to get messages (placeholder, needs implementation).
+ * Controller function to get messages.
  * @param req - Express Request object.
  * @param res - Express Response object.
  */

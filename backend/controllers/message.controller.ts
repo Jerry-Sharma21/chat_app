@@ -1,7 +1,13 @@
-import { Request, Response } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 
+import { IUser } from '../models/user.model';
 import Message from '../models/message.model.';
 import Conversation from '../models/conversation.model';
+
+// Extend the Request object to include the entire User object in the user property
+interface CustomRequest extends ExpressRequest {
+  user?: IUser;
+}
 
 /**
  * Controller function to send a message.
@@ -9,7 +15,7 @@ import Conversation from '../models/conversation.model';
  * @param res - Express Response object.
  */
 
-export const sendMessage = async (req: Request, res: Response) => {
+export const sendMessage = async (req: CustomRequest, res: Response) => {
   try {
     // Extract message and receiverId from request body and params
     const { message } = req.body;
@@ -62,9 +68,27 @@ export const sendMessage = async (req: Request, res: Response) => {
  * @param res - Express Response object.
  */
 
-export const getMessages = async (req: Request, res: Response) => {
+export const getMessages = async (req: CustomRequest, res: Response) => {
   try {
-    // Implementation for getting messages will be added here
+    // Extract userToChatId from request params and senderId from authenticated user
+    const { id: userToChatId } = req.params;
+    const senderId = req.user?._id;
+
+    // Find the conversation between sender and userToChatId and populate messages
+    const conversation = await Conversation.findOne({
+      participants: [senderId, userToChatId],
+    }).populate('messages');
+
+    // If no conversation exists, respond with an empty array
+    if (!conversation) {
+      return res.status(200).json([]);
+    }
+
+    // Extract messages from the conversation
+    const messages = conversation.messages;
+
+    // Respond with the messages
+    res.status(200).json(messages);
   } catch (error: any) {
     // Handle errors
     console.error('Error in getMessages controller: ', error.message);

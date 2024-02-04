@@ -1,3 +1,4 @@
+import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import express, { Request, Response } from 'express';
@@ -6,6 +7,13 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import messageRoutes from './routes/message.routes';
 import connectToMongoDB from './database/connectToMongoDB';
+
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
 
 // Load environment variables from .env file
 dotenv.config();
@@ -19,6 +27,9 @@ app.use(express.json());
 
 // Middleware to parse cookies from incoming requests
 app.use(cookieParser());
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Define a simple route for checking server status
 app.get('/', (req: Request, res: Response) => {
